@@ -5,6 +5,8 @@ import cors from 'cors';
 import { corsUrl, environment } from './config';
 import './database'; // initialize database
 import { NotFoundError, ApiError, InternalError } from './core/ApiError';
+import User from './database/model/User';
+
 import routesV1 from './routes/v1';
 
 process.on('uncaughtException', (e) => {
@@ -36,5 +38,6 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     ApiError.handle(new InternalError(), res);
   }
 });
+
 
 export default app;

@@ -1,7 +1,5 @@
-import { Schema, model, Document } from 'mongoose';
-
-export const DOCUMENT_NAME = 'Role';
-export const COLLECTION_NAME = 'roles';
+import { DataTypes, Model, Optional, Sequelize, UUIDV4} from 'sequelize';
+import { UserModel } from './User';
 
 export const enum RoleCode {
   LEARNER = 'LEARNER',
@@ -10,38 +8,62 @@ export const enum RoleCode {
   ADMIN = 'ADMIN',
 }
 
-export default interface Role extends Document {
-  code: string;
-  status?: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
+export interface Role{
+  roleId:string;
+  roleCode: string;
+  status: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  }
+
+export type RoleCreationAttributes = Optional<Role, 'roleId'>;
+
+export class RoleModel extends Model<Role, RoleCreationAttributes> implements Role {
+  public roleId!: string;
+  public roleCode!: string;
+  public status!: boolean;
+  public createdAt!: Date;
+  public updatedAt!: Date;
 }
 
-const schema = new Schema(
-  {
-    code: {
-      type: Schema.Types.String,
-      required: true,
-      enum: [RoleCode.LEARNER, RoleCode.WRITER, RoleCode.EDITOR, RoleCode.ADMIN],
+export default function (sequelize: Sequelize): typeof RoleModel {
+  RoleModel.init(
+    {
+    roleId:{
+        type:DataTypes.UUID, 
+        primaryKey:true, 
+        defaultValue:UUIDV4
     },
-    status: {
-      type: Schema.Types.Boolean,
-      default: true,
+    roleCode: {
+        type: DataTypes.ENUM(RoleCode.LEARNER, RoleCode.WRITER, RoleCode.EDITOR, RoleCode.ADMIN),
+        allowNull:false,
+        defaultValue:RoleCode.LEARNER,
     },
-    createdAt: {
-      type: Date,
-      required: true,
-      select: false,
+    status:{
+        type:DataTypes.BOOLEAN,
+        defaultValue:false 
+    },   
+    createdAt:{
+        type:DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
     },
-    updatedAt: {
-      type: Date,
-      required: true,
-      select: false,
+    updatedAt:{
+        type:DataTypes.DATE,
+        defaultValue:DataTypes.NOW
+    } 
     },
-  },
-  {
-    versionKey: false,
-  },
-);
+    {
+    sequelize,
+    tableName:"RoleNode"
+    }
+    );
 
-export const RoleModel = model<Role>(DOCUMENT_NAME, schema, COLLECTION_NAME);
+    return RoleModel;
+
+}
+
+
+
+
+
+

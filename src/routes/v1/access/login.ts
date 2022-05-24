@@ -3,7 +3,7 @@ import { SuccessResponse } from '../../../core/ApiResponse';
 import crypto from 'crypto';
 import UserRepo from '../../../database/repository/UserRepo';
 import { BadRequestError, AuthFailureError } from '../../../core/ApiError';
-import KeystoreRepo from '../../../database/repository/KeystoreRepo';
+
 import { createTokens } from '../../../auth/authUtils';
 import validator from '../../../helpers/validator';
 import schema from './schema';
@@ -27,12 +27,11 @@ export default router.post(
     const accessTokenKey = crypto.randomBytes(64).toString('hex');
     const refreshTokenKey = crypto.randomBytes(64).toString('hex');
 
-    await KeystoreRepo.create(user._id, accessTokenKey, refreshTokenKey);
-    const tokens = await createTokens(user, accessTokenKey, refreshTokenKey);
+    // const tokens = await createTokens(user, accessTokenKey, refreshTokenKey);
 
     new SuccessResponse('Login Success', {
-      user: _.pick(user, ['_id', 'name', 'roles', 'profilePicUrl']),
-      tokens: tokens,
+      user: user,
+      tokens: accessTokenKey,
     }).send(res);
   }),
 );

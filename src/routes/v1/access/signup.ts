@@ -4,17 +4,15 @@ import { RoleRequest } from 'app-request';
 import crypto from 'crypto';
 import UserRepo from '../../../database/repository/UserRepo';
 import { BadRequestError } from '../../../core/ApiError';
-import User from '../../../database/model/User';
+import User, { UserModel } from '../../../database/model/User';
 import { createTokens } from '../../../auth/authUtils';
 import validator from '../../../helpers/validator';
 import schema from './schema';
 import asyncHandler from '../../../helpers/asyncHandler';
 import bcrypt from 'bcrypt';
 import _ from 'lodash';
-import { RoleCode } from '../../../database/model/Role';
 
 const router = express.Router();
-
 router.post(
   '/basic',
   validator(schema.signup),
@@ -26,22 +24,22 @@ router.post(
     const refreshTokenKey = crypto.randomBytes(64).toString('hex');
     const passwordHash = await bcrypt.hash(req.body.password, 10);
 
-    const { user: createdUser, keystore } = await UserRepo.create(
+    const { user: createdUser} = await UserRepo.create(
       {
         name: req.body.name,
         email: req.body.email,
-        profilePicUrl: req.body.profilePicUrl,
         password: passwordHash,
-      } as User,
+        
+      } as UserModel,
       accessTokenKey,
       refreshTokenKey,
-      RoleCode.LEARNER,
+      req.body.roleId,
     );
 
-    const tokens = await createTokens(createdUser, keystore.primaryKey, keystore.secondaryKey);
+    // const tokens = await createTokens(createdUser, accessTokenKey,refreshTokenKey );
     new SuccessResponse('Signup Successful', {
-      user: _.pick(createdUser, ['_id', 'name', 'email', 'roles', 'profilePicUrl']),
-      tokens: tokens,
+      user: createdUser,
+      tokens: accessTokenKey,
     }).send(res);
   }),
 );

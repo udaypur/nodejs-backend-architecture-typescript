@@ -1,8 +1,8 @@
 import { Tokens } from 'app-request';
 import { AuthFailureError, InternalError } from '../core/ApiError';
 import JWT, { JwtPayload } from '../core/JWT';
-import { Types } from 'mongoose';
-import User from '../database/model/User';
+
+import  { UserModel } from '../database/model/User';
 import { tokenInfo } from '../config';
 
 export const getAccessToken = (authorization?: string) => {
@@ -19,15 +19,15 @@ export const validateTokenData = (payload: JwtPayload): boolean => {
     !payload.aud ||
     !payload.prm ||
     payload.iss !== tokenInfo.issuer ||
-    payload.aud !== tokenInfo.audience ||
-    !Types.ObjectId.isValid(payload.sub)
+    payload.aud !== tokenInfo.audience
+  
   )
     throw new AuthFailureError('Invalid Access Token');
   return true;
 };
 
 export const createTokens = async (
-  user: User,
+  user: UserModel,
   accessTokenKey: string,
   refreshTokenKey: string,
 ): Promise<Tokens> => {
@@ -35,7 +35,7 @@ export const createTokens = async (
     new JwtPayload(
       tokenInfo.issuer,
       tokenInfo.audience,
-      user._id.toString(),
+      user.userId.toString(),
       accessTokenKey,
       tokenInfo.accessTokenValidityDays,
     ),
@@ -47,7 +47,7 @@ export const createTokens = async (
     new JwtPayload(
       tokenInfo.issuer,
       tokenInfo.audience,
-      user._id.toString(),
+      user.userId.toString(),
       refreshTokenKey,
       tokenInfo.refreshTokenValidityDays,
     ),

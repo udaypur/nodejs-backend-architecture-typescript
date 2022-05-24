@@ -3,7 +3,6 @@ import { ProtectedRequest } from 'app-request';
 import UserRepo from '../database/repository/UserRepo';
 import { AuthFailureError, AccessTokenError, TokenExpiredError } from '../core/ApiError';
 import JWT from '../core/JWT';
-import KeystoreRepo from '../database/repository/KeystoreRepo';
 import { Types } from 'mongoose';
 import { getAccessToken, validateTokenData } from './authUtils';
 import validator, { ValidationSource } from '../helpers/validator';
@@ -21,13 +20,12 @@ export default router.use(
       const payload = await JWT.validate(req.accessToken);
       validateTokenData(payload);
 
-      const user = await UserRepo.findById(new Types.ObjectId(payload.sub));
+      const user = await UserRepo.findById(payload.sub);
       if (!user) throw new AuthFailureError('User not registered');
       req.user = user;
 
-      const keystore = await KeystoreRepo.findforKey(req.user._id, payload.prm);
-      if (!keystore) throw new AuthFailureError('Invalid access token');
-      req.keystore = keystore;
+      
+     
 
       return next();
     } catch (e) {

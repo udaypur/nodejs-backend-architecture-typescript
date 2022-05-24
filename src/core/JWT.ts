@@ -14,12 +14,14 @@ import Logger from './Logger';
  */
 
 export default class JWT {
-  private static readPublicKey(): Promise<string> {
-    return promisify(readFile)(path.join(__dirname, '../../keys/public.pem'), 'utf8');
+  private static readPublicKey() {
+    const tokenKey=process.env.TOKEN;
+    return tokenKey
   }
 
-  private static readPrivateKey(): Promise<string> {
-    return promisify(readFile)(path.join(__dirname, '../../keys/private.pem'), 'utf8');
+  private static readPrivateKey(){
+    const tokenKey=process.env.TOKEN;
+    return tokenKey;
   }
 
   public static async encode(payload: JwtPayload): Promise<string> {
@@ -39,7 +41,7 @@ export default class JWT {
       return (await promisify(verify)(token, cert)) as JwtPayload;
     } catch (e) {
       Logger.debug(e);
-      if (e && e.name === 'TokenExpiredError') throw new TokenExpiredError();
+      if (e && e=== 'TokenExpiredError') throw new TokenExpiredError();
       // throws error if the token has not been encrypted by the private key
       throw new BadTokenError();
     }

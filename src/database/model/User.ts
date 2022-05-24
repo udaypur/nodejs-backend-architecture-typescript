@@ -1,76 +1,98 @@
-import { model, Schema, Document } from 'mongoose';
-import Role from './Role';
+import { DataTypes, Model, Optional, Sequelize, UUIDV4} from 'sequelize';
+import { RoleModel } from './Role';
 
-export const DOCUMENT_NAME = 'User';
-export const COLLECTION_NAME = 'users';
+export interface User{
+  userId:string;
+  name:string;
+  email:string;
+  password:string;
+  roleId:string;
+  verified:boolean;
+  status:boolean;
+  createdAt: Date;
+  updatedAt:Date;
+  }
 
-export default interface User extends Document {
-  name: string;
-  email?: string;
-  password?: string;
-  profilePicUrl?: string;
-  roles: Role[];
-  verified?: boolean;
-  status?: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
+export type UserCreationAttributes = Optional<User, 'userId'>;
+
+
+export class UserModel extends Model<User, UserCreationAttributes> implements User {
+  public userId!: string;
+  public name!: string;
+  public email!: string;
+  public password!: string;
+  public roleId!: string;
+  public verified!: boolean;
+  public status!: boolean;
+  public createdAt!: Date;
+  public updatedAt!: Date;
 }
 
-const schema = new Schema(
-  {
+ export default function (sequelize: Sequelize): typeof UserModel {
+  UserModel.init(
+    {
+    userId:{
+        type:DataTypes.UUID, 
+        primaryKey:true, 
+        defaultValue:UUIDV4
+    },
     name: {
-      type: Schema.Types.String,
-      required: true,
-      trim: true,
-      maxlength: 100,
+        type: DataTypes.STRING,
+        allowNull:false,
     },
     email: {
-      type: Schema.Types.String,
-      required: true,
-      unique: true,
-      trim: true,
-      select: false,
+        type: DataTypes.STRING,
+        allowNull:false,
+        unique:true
     },
     password: {
-      type: Schema.Types.String,
-      select: false,
+        type: DataTypes.STRING,
+        allowNull:false,
     },
-    profilePicUrl: {
-      type: Schema.Types.String,
-      trim: true,
-    },
-    roles: {
-      type: [
-        {
-          type: Schema.Types.ObjectId,
-          ref: 'Role',
+    roleId:{
+        type:DataTypes.UUID,
+        references: {
+            model: {
+              tableName: 'RoleNode',
+              schema:'public'
+              },
+            key: 'roleId'
+            },
+        allowNull: false
         },
-      ],
-      required: true,
-      select: false,
+    
+    status:{
+        type:DataTypes.BOOLEAN,
+        defaultValue:true 
     },
-    verified: {
-      type: Schema.Types.Boolean,
-      default: false,
+    
+    verified:{
+        type:DataTypes.BOOLEAN,
+        defaultValue:true
     },
-    status: {
-      type: Schema.Types.Boolean,
-      default: true,
+    
+    createdAt:{
+        type:DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
     },
-    createdAt: {
-      type: Date,
-      required: true,
-      select: false,
+    updatedAt:{
+        type:DataTypes.DATE,
+        defaultValue:DataTypes.NOW
+    } 
     },
-    updatedAt: {
-      type: Date,
-      required: true,
-      select: false,
-    },
-  },
-  {
-    versionKey: false,
-  },
-);
+    {
+    sequelize,
+    tableName:"UserNode"
+    }
+  
+    );
+    
+    return UserModel;
+  
+}
 
-export const UserModel = model<User>(DOCUMENT_NAME, schema, COLLECTION_NAME);
+
+
+
+
+

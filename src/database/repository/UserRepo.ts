@@ -1,89 +1,70 @@
-import User, { UserModel } from '../model/User';
-import Role, { RoleModel } from '../model/Role';
+import {UserModel}  from '../model/User';
+import {RoleModel}  from '../model/Role';
 import { InternalError } from '../../core/ApiError';
-import { Types } from 'mongoose';
-import KeystoreRepo from './KeystoreRepo';
-import Keystore from '../model/Keystore';
+
+// import KeystoreRepo from './KeystoreRepo';
+// import Keystore from '../model/Keystore';
 
 export default class UserRepo {
   // contains critical information of the user
-  public static findById(id: Types.ObjectId): Promise<User | null> {
-    return UserModel.findOne({ _id: id, status: true })
-      .select('+email +password +roles')
-      .populate({
-        path: 'roles',
-        match: { status: true },
-      })
-      .lean<User>()
-      .exec();
+  public static findById(id:any): Promise<UserModel | null>  {
+    return UserModel.findOne({ where:{userId:id,status:true}})
+    
+
   }
 
-  public static findByEmail(email: string): Promise<User | null> {
-    return UserModel.findOne({ email: email, status: true })
-      .select('+email +password +roles')
-      .populate({
-        path: 'roles',
-        match: { status: true },
-        select: { code: 1 },
-      })
-      .lean<User>()
-      .exec();
+  public static findByEmail(email: string):Promise<UserModel | null>  {
+    return UserModel.findOne({ where:{email: email, status: true }})
   }
 
-  public static findProfileById(id: Types.ObjectId): Promise<User | null> {
-    return UserModel.findOne({ _id: id, status: true })
-      .select('+roles')
-      .populate({
-        path: 'roles',
-        match: { status: true },
-        select: { code: 1 },
-      })
-      .lean<User>()
-      .exec();
+  public static findProfileById(id: any):Promise<UserModel | null> {
+    return UserModel.findOne({ where :{userId: id, status: true} })     
   }
 
-  public static findPublicProfileById(id: Types.ObjectId): Promise<User | null> {
-    return UserModel.findOne({ _id: id, status: true }).lean<User>().exec();
+  public static findPublicProfileById(id:any):Promise<UserModel | null> {
+    return UserModel.findOne({ where:{userId: id, status: true }}) 
   }
 
   public static async create(
-    user: User,
+    user: UserModel,
     accessTokenKey: string,
     refreshTokenKey: string,
-    roleCode: string,
-  ): Promise<{ user: User; keystore: Keystore }> {
+    roleId: string,
+  ): Promise<{ user: UserModel }> {
     const now = new Date();
 
-    const role = await RoleModel.findOne({ code: roleCode })
-      .select('+email +password')
-      .lean<Role>()
-      .exec();
+    const role = await RoleModel.findOne({ where:{ roleId:roleId}})
+      // .select('+email +password')
+      // .lean<Role>()
+      // .exec();
     if (!role) throw new InternalError('Role must be defined');
-
-    user.roles = [role._id];
+    user.roleId= role.roleId;
     user.createdAt = user.updatedAt = now;
     const createdUser = await UserModel.create(user);
-    const keystore = await KeystoreRepo.create(createdUser._id, accessTokenKey, refreshTokenKey);
-    return { user: createdUser.toObject(), keystore: keystore };
+    // const keystore = await KeystoreRepo.create(createdUser._id, accessTokenKey, refreshTokenKey);
+    return { user: createdUser};
   }
 
-  public static async update(
-    user: User,
-    accessTokenKey: string,
-    refreshTokenKey: string,
-  ): Promise<{ user: User; keystore: Keystore }> {
-    user.updatedAt = new Date();
-    await UserModel.updateOne({ _id: user._id }, { $set: { ...user } })
-      .lean()
-      .exec();
-    const keystore = await KeystoreRepo.create(user._id, accessTokenKey, refreshTokenKey);
-    return { user: user, keystore: keystore };
-  }
+  // public static async update(
+  //   user: UserModel,
+  //   accessTokenKey: string,
+  //   refreshTokenKey: string,
+  // ): Promise<{ user: UserModel}> 
+  // {
+  //   user.updatedAt = new Date();
+  //   await UserModel.update({where:{
 
-  public static updateInfo(user: User): Promise<any> {
-    user.updatedAt = new Date();
-    return UserModel.updateOne({ _id: user._id }, { $set: { ...user } })
-      .lean()
-      .exec();
-  }
-}
+  //   }})
+    
+  //   const keystore = await KeystoreRepo.create(user._id, accessTokenKey, refreshTokenKey);
+  //   return { user: user, keystore: keystore };
+  // }
+
+//   public static updateInfo(user: User){
+//     // user.updatedAt = new Date();
+//     // return UserModel.updateOne({ _id: user._id }, { $set: { ...user } })
+//     //   .lean()
+//     //   .exec();
+//   // }
+ }
+
